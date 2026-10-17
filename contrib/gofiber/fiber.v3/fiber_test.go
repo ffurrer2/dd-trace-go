@@ -187,7 +187,7 @@ func TestUserContext(t *testing.T) {
 
 	// add a middleware that adds a value to the context
 	router.Use(func(c fiber.Ctx) error {
-		ctx := context.WithValue(c.Context(), fooKey, "bar")
+		ctx := context.WithValue(c, fooKey, "bar")
 		c.SetContext(ctx)
 		return c.Next()
 	})
@@ -197,14 +197,14 @@ func TestUserContext(t *testing.T) {
 
 	router.Get("/", func(c fiber.Ctx) error {
 		// check if not default empty context
-		assert.NotEmpty(c.Context())
+		assert.NotEmpty(c)
 
 		// checks that the user context still has the information provided before using the middleware
-		foo, ok := c.Context().Value(fooKey).(string)
+		foo, ok := c.Value(fooKey).(string)
 		assert.True(ok)
 		assert.Equal(foo, "bar")
 
-		span, _ := tracer.StartSpanFromContext(c.Context(), "http.request")
+		span, _ := tracer.StartSpanFromContext(c, "http.request")
 		defer span.Finish()
 		return c.SendString("test")
 	})
@@ -248,12 +248,12 @@ func TestPropagation(t *testing.T) {
 	router := fiber.New()
 	router.Use(Middleware(WithService("foobar")))
 	router.Get("/span/exists/true", func(c fiber.Ctx) error {
-		s, _ := tracer.SpanFromContext(c.Context())
+		s, _ := tracer.SpanFromContext(c)
 		assert.Equal(s.Context().TraceID() == pspan.Context().TraceID(), true)
 		return c.SendString(c.Params("span exists"))
 	})
 	router.Get("/span/exists/false", func(c fiber.Ctx) error {
-		s, _ := tracer.SpanFromContext(c.Context())
+		s, _ := tracer.SpanFromContext(c)
 		assert.Equal(s.Context().TraceID() == pspan.Context().TraceID(), false)
 		return c.SendString(c.Params("span does not exist"))
 	})
