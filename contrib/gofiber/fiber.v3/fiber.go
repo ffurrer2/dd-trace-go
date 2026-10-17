@@ -74,7 +74,7 @@ func Middleware(opts ...Option) fiber.Handler {
 			tracer.Tag(ext.Component, componentName),
 			tracer.Tag(ext.SpanKind, ext.SpanKindServer),
 		)
-		span, ctx := tracer.StartSpanFromContext(c.Context(), cfg.spanName, opts...)
+		span, ctx := tracer.StartSpanFromContext(c, cfg.spanName, opts...)
 
 		defer span.Finish()
 
